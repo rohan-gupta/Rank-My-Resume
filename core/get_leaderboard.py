@@ -15,10 +15,11 @@ def handler(event, context):
 		obj = s3_client.get_object(Bucket=bucket_name, Key=file_name)
 		score = obj['Body'].read().decode('utf-8')
 
-		username, jobid = file_name.split(".")[0].split("-")
+		username, jobOrg, jobid = file_name.split(".")[0].split("-")
 
 		results.append({
 			"username": username,
+			"jobOrg": jobOrg,
 			"jobId": jobid,
 			"score": score,
 		})
