@@ -5,16 +5,15 @@ An intelligent applicant tracking system that leverages AWS serverless technolog
 
 ## Core Architecture
 - **Text Extraction**: PyPDF for resume parsing
-- **Entity Recognition**: AWS Comprehend for skill extraction
+- **Entity Recognition**: AWS Bedrock for skill extraction
 - **Scoring Engine**: Multi-stage computational pipeline
-- **Infrastructure**: AWS Lambda, SNS/SQS fan-out architecture
+- **Infrastructure**: AWS Lambda, SQS fan-out architecture
 
 ## Key Processing Steps
 1. Resume Text Extraction
 2. Skill Entity Recognition
 3. Keyword Matching
 4. Semantic Similarity Analysis
-5. Hard Requirement Validation
 6. Aggregate Scoring (0-100 scale)
 
 ## Technical Components
@@ -29,7 +28,10 @@ An intelligent applicant tracking system that leverages AWS serverless technolog
 - Low-latency design
 - Elastic infrastructure
 
-## Potential Enhancements
-- Advanced NLP models
-- Machine learning scoring refinement
-- Multi-language support
+# How To Use
+- `cd Rank-My-Resume`
+- `cd core`
+- `npm install serverless`
+- `npm install serverless-python-requirements`
+- `serverless deploy`
+- access the html to use the functionality

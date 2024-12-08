@@ -1,0 +1,4 @@
+pypdf
+boto3
+numpy
+typing-extensions

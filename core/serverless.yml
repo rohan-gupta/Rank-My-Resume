@@ -1,0 +1,122 @@
+org: northwesternmsai
+app: resume
+service: rank-my-resume
+
+
+plugins:
+    - serverless-python-requirements
+
+
+custom:
+    pythonRequirements:
+        dockerizePip: non-linux
+        useDownloadCache: true
+        useStaticCache: true
+        layer:
+            compatibleRuntimes:
+                - python3.9
+            allowedAccounts:
+                - '*'
+
+provider:
+    name: aws
+    runtime: python3.9
+    region: us-east-1
+    iam:
+        role:
+            statements:
+                - Effect: Allow
+                  Action:
+                      - sqs:SendMessage
+                  Resource: "*"
+                - Effect: Allow
+                  Action:
+                      - s3:PutObject
+                      - s3:GetObject
+                      - s3:DeleteObject
+                      - s3:ListBucket
+                  Resource: "*"
+                - Effect: Allow
+                  Action:
+                      - bedrock:InvokeModel
+                  Resource: "*"
+
+resources:
+    Resources:
+        RankMyResumeS3:
+            Type: AWS::S3::Bucket
+            Properties:
+                BucketName: rank-my-resume-s3
+                CorsConfiguration:
+                    CorsRules:
+                        - AllowedOrigins:
+                              - "*"
+                          AllowedMethods:
+                              - GET
+                              - PUT
+                              - DELETE
+                          AllowedHeaders:
+                              - "*"
+                PublicAccessBlockConfiguration:
+                    BlockPublicAcls: false
+                    BlockPublicPolicy: false
+                    IgnorePublicAcls: false
+                    RestrictPublicBuckets: false
+
+        RankMyResumeS3BucketPolicy:
+            Type: AWS::S3::BucketPolicy
+            Properties:
+                Bucket:
+                    Ref: RankMyResumeS3
+                PolicyDocument:
+                    Version: "2012-10-17"
+                    Statement:
+                        - Sid: PublicReadGetObject
+                          Effect: Allow
+                          Principal: "*"
+                          Action:
+                              - s3:GetObject
+                          Resource:
+                              Fn::Join:
+                                  - ""
+                                  - - "arn:aws:s3:::"
+                                    - Ref: RankMyResumeS3
+                                    - /*
+
+        RankMyResumeSQSUpload:
+            Type: AWS::SQS::Queue
+            Properties:
+                QueueName: rank-my-resume-sqs-upload
+
+functions:
+    upload_resume:
+        handler: upload_resume.handler
+        layers:
+            - Ref: PythonRequirementsLambdaLayer
+        events:
+            - httpApi:
+                  path: /upload
+                  method: post
+
+    process_resume:
+        handler: process_resume.handler
+        layers:
+            - Ref: PythonRequirementsLambdaLayer
+        events:
+            - sqs:
+                  arn:
+                      Fn::GetAtt:
+                          - RankMyResumeSQSUpload
+                          - Arn
+
+    score_resume:
+        handler: score_resume.handler
+        layers:
+            - Ref: PythonRequirementsLambdaLayer
+        events:
+            - s3:
+                  bucket: rank-my-resume-s3
+                  event: s3:ObjectCreated:*
+                  rules:
+                      - suffix: .json
+                  existing: true
