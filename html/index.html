@@ -85,7 +85,7 @@
     document.getElementById("computeButton").addEventListener("click", async function () {
         const username = document.getElementById("username").value;
         const pdfFile = document.getElementById("pdfUpload").files[0];
-        const jobDescription = document.getElementById("jobDescription").value;
+        const jobDescription = document.getElementById("jobDescription").value.replace(/[^\x00-\xFF]/g, "");
 
         if (!username) {
             alert("Please enter your username.");
@@ -101,7 +101,9 @@
             const resumeBase64 = await toBase64(pdfFile);
             const jobBase64 = btoa(jobDescription);
 
+            console.log(jobDescription)
             const endpoint = "https://ft776g0b88.execute-api.us-east-1.amazonaws.com/upload";
+
             const payload = {
                 username: username,
                 resume: resumeBase64,
