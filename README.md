@@ -7,6 +7,7 @@ An intelligent applicant tracking system that leverages AWS serverless technolog
 - **Text Extraction**: PyPDF for resume parsing
 - **Entity Recognition**: AWS Bedrock for skill extraction
 - **Scoring Engine**: Multi-stage computational pipeline
+- **Leaderboard**: Sort the score list
 - **Infrastructure**: AWS Lambda, SQS fan-out architecture, Serverless Framework (Infra as Code)
 
 ## Key Processing Steps
@@ -14,7 +15,8 @@ An intelligent applicant tracking system that leverages AWS serverless technolog
 2. Hard Requirements Recognition
 3. Keyword Matching
 4. Semantic Similarity Analysis
-6. Aggregate Scoring (0-100 scale)
+5. Aggregate Scoring
+6. Compose Leadeboard
 
 ## Technical Components
 - **Compute**: AWS Lambda
@@ -33,5 +35,5 @@ An intelligent applicant tracking system that leverages AWS serverless technolog
 - `npm install serverless`
 - `npm install serverless-python-requirements`
 - `serverless deploy`
-- update the endpoint show after serverless deploy in the html/js file (line 105)
+- update the endpoints shown after serverless deploy in the html/js file (line 119 in index and line 42 in leaderboard)
 - access the html to use the app
