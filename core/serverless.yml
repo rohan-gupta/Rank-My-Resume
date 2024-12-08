@@ -22,6 +22,20 @@ provider:
     name: aws
     runtime: python3.9
     region: us-east-1
+    httpApi:
+        cors:
+            allowOrigins:
+                - '*'
+            allowHeaders:
+                - Content-Type
+                - Authorization
+                - X-Amz-Date
+                - X-Api-Key
+                - X-Amz-Security-Token
+            allowMethods:
+                - GET
+                - POST
+                - OPTIONS
     iam:
         role:
             statements:
@@ -120,3 +134,12 @@ functions:
                   rules:
                       - suffix: .json
                   existing: true
+
+    get_leaderboard:
+        handler: get_leaderboard.handler
+        layers:
+            - Ref: PythonRequirementsLambdaLayer
+        events:
+            - httpApi:
+                path: /leaderboard
+                method: get

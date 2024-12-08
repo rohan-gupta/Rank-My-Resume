@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rank My Resume</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+    <style>
+        #pdfViewer {
+            height: 315px;
+        }
+
+        #jobDescription {
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+<div class="ui container" style="margin-top: 30px;">
+    <!-- Menu -->
+    <div class="ui primary menu">
+        <a class="item"><h3>Rank My Resume</h3></a>
+        <a class="item" href="./index.html">Home</a>
+        <a class="item" href="./leaderboard.html">Leaderboard</a>
+    </div>
+
+    <!-- Username Input -->
+    <div class="ui form">
+        <div class="field">
+            <h3 class="ui header">Enter Username</h3>
+            <input type="text" id="username" placeholder="Username">
+        </div>
+    </div>
+    <div class="ui divider"></div>
+
+    <div class="ui grid">
+        <!-- PDF Upload Section -->
+        <div class="eight wide column">
+            <div class="ui segment">
+                <h3 class="ui header">Upload PDF</h3>
+                <input type="file" accept=".pdf" class="ui input" id="pdfUpload">
+                <div class="ui segment">
+                    <iframe
+                            id="pdfViewer"
+                            src=""
+                            width="100%"
+                            style="border: none;"
+                    ></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Description Section -->
+        <div class="eight wide column">
+            <div class="ui segment form">
+                <h3 class="ui header">Enter Job Details</h3>
+                <div class="field">
+                    <input type="text" id="jobId" placeholder="Enter Job ID">
+                </div>
+                <div class="field">
+                    <textarea
+                            id="jobDescription"
+                            placeholder="Paste job description here..."
+                            style="width: 100%;"
+                    ></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="ui segment" style="text-align: center;">
+        <button class="ui primary button" id="computeButton">Compute Match Score</button>
+        <button class="ui secondary button" id="retrieveButton">Retrieve Match Score</button>
+    </div>
+</div>
+
+<script>
+    function toBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                const base64String = reader.result.split(",")[1]; // Remove metadata
+                resolve(base64String);
+            };
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    document.getElementById("computeButton").addEventListener("click", async function () {
+        const username = document.getElementById("username").value;
+        const pdfFile = document.getElementById("pdfUpload").files[0];
+        const jobDescription = document.getElementById("jobDescription").value.replace(/[^\x00-\xFF]/g, "");
+        const jobId = document.getElementById("jobId").value;
+
+        if (!username) {
+            alert("Please enter your username.");
+            return;
+        }
+
+        if (!jobId || !pdfFile || !jobDescription) {
+            alert("Please enter Job ID, upload a PDF, and provide a job description.");
+            return;
+        }
+
+        try {
+            const resumeBase64 = await toBase64(pdfFile);
+            const jobBase64 = btoa(jobDescription);
+
+            const endpoint = "https://ft776g0b88.execute-api.us-east-1.amazonaws.com/upload";
+
+            const payload = {
+                username: username,
+                resume: resumeBase64,
+                job: jobBase64,
+                jobId: jobId
+            };
+
+            await fetch(endpoint, {
+                method: "POST",
+                mode: "no-cors",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            alert("Computing match score...");
+        } catch (error) {
+            alert("Failed to compute match score", error);
+        }
+    });
+
+    document.getElementById("pdfUpload").addEventListener("change", function (event) {
+        const file = event.target.files[0];
+        if (file && file.type === "application/pdf") {
+            const url = URL.createObjectURL(file);
+            document.getElementById("pdfViewer").src = url;
+        } else {
+            alert("Please upload a valid PDF file.");
+        }
+    });
+
+    document.getElementById("retrieveButton").addEventListener("click", async function () {
+        const bucketUrl = "https://rank-my-resume-s3.s3.us-east-1.amazonaws.com";
+        const username = document.getElementById("username").value;
+        const fileName = username + ".txt";
+
+        if (!bucketUrl || !fileName) {
+            alert("Bucket URL and file name are required.");
+            return;
+        }
+
+        const fileUrl = `${bucketUrl}/${fileName}`;
+
+        try {
+            const response = await fetch(fileUrl);
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch file. HTTP status: ${response.status}`);
+            }
+
+            const jsonData = await response.json();
+            alert(`Match Score: ${jsonData}`);
+        } catch (error) {
+            console.error("Error retrieving file:", error);
+            alert("Error retrieving file. Please check the bucket URL and file name.");
+        }
+    });
+</script>
+</body>
+</html>

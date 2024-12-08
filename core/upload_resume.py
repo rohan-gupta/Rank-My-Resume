@@ -8,11 +8,13 @@ def handler(event, context):
 	username = body["username"]
 	resume = body["resume"]
 	job = body["job"]
+	jobId = body["jobId"]
 
 	sqs_message = {
 		"username": username,
 		"resume": resume,
 		"job": job,
+		"jobId": jobId,
 	}
 	sqs_client = boto3.client('sqs')
 	sqs_client.send_message(

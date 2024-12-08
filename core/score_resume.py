@@ -105,11 +105,7 @@ def handler(event, context):
     score3 = compare_hard_requirements(resume, job)
     score = (score1 + score2 + score3) / 3
 
-    resume = {
-        "resume": resume,
-        "job": job,
-        "score": score * 100,
-    }
+    open(f"/tmp/score.txt", "w").write(str(score))
 
-    json.dump(resume, open("/tmp/resume.json", "w"), indent=4)
-    s3_client.upload_file("/tmp/resume.json", "rank-my-resume-s3", object_key)
+    filename = object_key.split(".")[0] + ".txt"
+    s3_client.upload_file(f"/tmp/score.txt", "rank-my-resume-s3", filename)

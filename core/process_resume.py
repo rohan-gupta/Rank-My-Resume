@@ -11,6 +11,7 @@ def handler(event, context):
 	username = body["username"]
 	resume = base64.b64decode(body["resume"])
 	job = base64.b64decode(body["job"]).decode('utf-8')
+	jobId = body["jobId"]
 
 	resume = io.BytesIO(resume)
 	resume = PdfReader(resume)
@@ -28,4 +29,4 @@ def handler(event, context):
 	json.dump(resume, open("/tmp/resume.json", "w"), indent=4)
 
 	s3_client = boto3.client('s3')
-	s3_client.upload_file("/tmp/resume.json", "rank-my-resume-s3", f"{username}.json")
+	s3_client.upload_file("/tmp/resume.json", "rank-my-resume-s3", f"{username}-{jobId}.json")
